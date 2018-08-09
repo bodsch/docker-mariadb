@@ -1,0 +1,44 @@
+sudo: required
+
+services:
+  - docker
+
+#install:
+#  - docker build --tag bodsch/docker-mariadb .
+#  - docker run --detach --name mariadb bodsch/docker-mariadb
+env:
+  global:
+    - BUILD_DATE=$(date +%Y-%m-%d)
+    - BUILD_VERSION=$(date +%y%m)
+    - BUILD_TYPE=stable
+
+jobs:
+  include:
+    - stage: build
+      script:
+        - make build
+
+    - stage: test plain
+      script:
+        - docker-compose --file docker-compose_example.yml up --build -d
+        - docker-compose --file docker-compose_example.yml kill
+        - docker-compose --file docker-compose_example.yml down
+
+#    - stage: test with consul
+#      script:
+#        - docker-compose --file docker-compose_example_consul.yml up --build -d
+#        - docker-compose --file docker-compose_example_consul.yml kill
+#        - docker-compose --file docker-compose_example_consul.yml down
+
+#    - stage: test with etcd
+#      script:
+#        - docker-compose --file docker-compose_example_etcd.yml up --build -d
+#        - docker-compose --file docker-compose_example_etcd.yml kill
+#        - docker-compose --file docker-compose_example_etcd.yml down
+
+    - stage: build and release
+      script:
+        - make build
+        - docker login -u="${DOCKER_USERNAME}" -p="${DOCKER_PASSWORD}"
+        - make release
+        - docker logout

@@ -1,0 +1,17 @@
+---
+version: '3.3'
+
+services:
+
+  database:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - BUILD_DATE=${BUILD_DATE}
+    container_name: database
+    hostname: database
+    environment:
+      - MYSQL_SYSTEM_USER=root
+      - MYSQL_ROOT_PASS=vYUQ14SGVrJRi69PsujC
+
