@@ -12,13 +12,13 @@ set_system_user() {
 
   local current_user=$(grep user /etc/mysql/my.cnf | cut -d '=' -f 2 | sed 's| ||g')
 
-  if [ "${MYSQL_SYSTEM_USER}" = "${current_user}" ]
+  if [ "${MARIADB_SYSTEM_USER}" = "${current_user}" ]
   then
     return
   fi
 
   sed -i \
-    -e "s/\(user.*=\).*/\1 ${MYSQL_SYSTEM_USER}/g" \
+    -e "s/\(user.*=\).*/\1 ${MARIADB_SYSTEM_USER}/g" \
     /etc/mysql/my.cnf
 }
 
@@ -31,13 +31,13 @@ bootstrap_database() {
     -e "s|%WORK_DIR%|${WORK_DIR}|g" \
     /etc/mysql/my.cnf
 
-  [ -d ${MYSQL_DATA_DIR} ]        || mkdir -p ${MYSQL_DATA_DIR}
-  [ -d ${MYSQL_LOG_DIR} ]         || mkdir -p ${MYSQL_LOG_DIR}
-  [ -d ${MYSQL_TMP_DIR} ]         || mkdir -p ${MYSQL_TMP_DIR}
-  [ -d ${MYSQL_RUN_DIR} ]         || mkdir -p ${MYSQL_RUN_DIR}
-  [ -d ${MYSQL_INNODB_DIR} ]      || mkdir -p ${MYSQL_INNODB_DIR}
+  [ -d ${MARIADB_DATA_DIR} ]        || mkdir -p ${MARIADB_DATA_DIR}
+  [ -d ${MARIADB_LOG_DIR} ]         || mkdir -p ${MARIADB_LOG_DIR}
+  [ -d ${MARIADB_TMP_DIR} ]         || mkdir -p ${MARIADB_TMP_DIR}
+  [ -d ${MARIADB_RUN_DIR} ]         || mkdir -p ${MARIADB_RUN_DIR}
+  [ -d ${MARIADB_INNODB_DIR} ]      || mkdir -p ${MARIADB_INNODB_DIR}
 
-  chown -R ${MYSQL_SYSTEM_USER}: ${WORK_DIR}
+  chown -R ${MARIADB_SYSTEM_USER}: ${WORK_DIR}
 
   if [ ! -f ${bootstrap} ]
   then
@@ -47,7 +47,7 @@ bootstrap_database() {
     [ -f /root/.my.cnf ] && rm /root/.my.cnf
 
     log_info "install initial databases"
-    mysql_install_db --user=${MYSQL_SYSTEM_USER} 1> /dev/null 2> /dev/null
+    mysql_install_db --user=${MARIADB_SYSTEM_USER} 1> /dev/null 2> /dev/null
     [ $? -gt 0 ] && exit $?
 
     log_info "start initial instance in safe mode to set passwords"
@@ -59,8 +59,8 @@ bootstrap_database() {
     log_info "create privileges for root access"
     (
       echo "USE mysql;"
-      echo "UPDATE user SET password = PASSWORD('${MYSQL_ROOT_PASS}') WHERE user = 'root';"
-      echo "create user 'root'@'%' IDENTIFIED BY '${MYSQL_ROOT_PASS}';"
+      echo "UPDATE user SET password = PASSWORD('${MARIADB_ROOT_PASS}') WHERE user = 'root';"
+      echo "create user 'root'@'%' IDENTIFIED BY '${MARIADB_ROOT_PASS}';"
       echo "GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' WITH GRANT OPTION;"
       echo "GRANT ALL PRIVILEGES ON *.* TO 'root'@'localhost' WITH GRANT OPTION;"
       echo "FLUSH PRIVILEGES;"
@@ -80,8 +80,8 @@ bootstrap_database() {
 [client]
 host     = localhost
 user     = root
-password = ${MYSQL_ROOT_PASS}
-socket   = ${MYSQL_RUN_DIR}/mysql.sock
+password = ${MARIADB_ROOT_PASS}
+socket   = ${MARIADB_RUN_DIR}/mysql.sock
 
 EOF
 
@@ -93,7 +93,7 @@ EOF
 
 run() {
 
-  if [ ! -z ${MYSQL_BIN} ]
+  if [ ! -z ${MARIADB_BIN} ]
   then
 
     set_system_user
@@ -108,7 +108,7 @@ run() {
 
     log_info "start instance"
     /usr/bin/mysqld \
-      --user=${MYSQL_SYSTEM_USER} \
+      --user=${MARIADB_SYSTEM_USER} \
       --userstat \
       --console
 

@@ -1,18 +1,18 @@
-# docker-myariadb
+# docker-mariadb
 
-Docker container with an running MariaDB Database.
+Alpine based docker container with an MariaDB.
 
-The Container stores there Data at the Hostsystem in the Directory `/tmp/docker-data/myariadb` or in a configured Datadirectory.
+The container stores there data at the hostsystem in the directory `/tmp/docker-data/mariadb` or in a configured data directory.
 
 # Status
 
-[![Docker Pulls](https://img.shields.io/docker/pulls/bodsch/docker-myariadb.svg?branch)][hub]
-[![Image Size](https://images.microbadger.com/badges/image/bodsch/docker-myariadb.svg?branch)][microbadger]
-[![Build Status](https://travis-ci.org/bodsch/docker-myariadb.svg?branch)][travis]
+[![Docker Pulls](https://img.shields.io/docker/pulls/bodsch/docker-mariadb.svg?branch)][hub]
+[![Image Size](https://images.microbadger.com/badges/image/bodsch/docker-mariadb.svg?branch)][microbadger]
+[![Build Status](https://travis-ci.org/bodsch/docker-mariadb.svg?branch)][travis]
 
-[hub]: https://hub.docker.com/r/bodsch/docker-myariadb/
-[microbadger]: https://microbadger.com/images/bodsch/docker-myariadb
-[travis]: https://travis-ci.org/bodsch/docker-myariadb
+[hub]: https://hub.docker.com/r/bodsch/docker-mariadb/
+[microbadger]: https://microbadger.com/images/bodsch/docker-mariadb
+[travis]: https://travis-ci.org/bodsch/docker-mariadb
 
 
 # Build
@@ -34,7 +34,7 @@ History `make history`
 
 # Docker Hub
 
-You can find the Container also at  [DockerHub](https://hub.docker.com/r/bodsch/docker-myariadb/)
+You can find the Container also at  [DockerHub](https://hub.docker.com/r/bodsch/docker-mariadb/)
 
 
 # Versions
