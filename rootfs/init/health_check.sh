@@ -12,7 +12,8 @@ set -eo pipefail
 
 host="$(hostname -i || echo '127.0.0.1')"
 
-if select="$(echo 'SELECT 1' | mysql --defaults-file="/root/.my.cnf" --host="${host}" --silent)" && [ "${select}" = '1' ]; then
+if select="$(echo 'SELECT 1' | mysql --defaults-file="/root/.my.cnf" --host="${host}" --silent)" && [[ "${select}" = '1' ]]
+then
   exit 0
 fi
 

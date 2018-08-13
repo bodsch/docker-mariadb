@@ -3,24 +3,23 @@ sudo: required
 services:
   - docker
 
-#install:
-#  - docker build --tag bodsch/docker-mariadb .
-#  - docker run --detach --name mariadb bodsch/docker-mariadb
 env:
   global:
     - BUILD_DATE=$(date +%Y-%m-%d)
     - BUILD_VERSION=$(date +%y%m)
-    - BUILD_TYPE=stable
+    - MARIADB_VERSION=$(./latest-release.sh)
 
 jobs:
   include:
     - stage: build
       script:
-        - make build
+        - make
 
     - stage: test plain
       script:
-        - docker-compose --file docker-compose_example.yml up --build -d
+        - docker-compose --file docker-compose_example.yml build
+        - docker-compose --file docker-compose_example.yml up -d
+        - docker ps | grep -q database
         - docker-compose --file docker-compose_example.yml kill
         - docker-compose --file docker-compose_example.yml down
 
@@ -36,9 +35,17 @@ jobs:
 #        - docker-compose --file docker-compose_example_etcd.yml kill
 #        - docker-compose --file docker-compose_example_etcd.yml down
 
-    - stage: build and release
+    - stage: push latest docker image
       script:
         - make build
         - docker login -u="${DOCKER_USERNAME}" -p="${DOCKER_PASSWORD}"
-        - make release
+        - docker tag ${DOCKER_USERNAME}/docker-mariadb:${MARIADB_VERSION} ${DOCKER_USERNAME}/docker-mariadb:latest
+        - docker push ${DOCKER_USERNAME}/docker-mariadb:latest
+        - docker logout
+
+    - stage: push version docker image
+      script:
+        - make build
+        - docker login -u="${DOCKER_USERNAME}" -p="${DOCKER_PASSWORD}"
+        - docker push ${DOCKER_USERNAME}/docker-mariadb:${MARIADB_VERSION}
         - docker logout

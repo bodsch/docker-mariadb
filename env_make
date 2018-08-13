@@ -1,9 +1,9 @@
 PORTS = \
   --publish 3306
 
-VOLUMES = \
-  --volume /var/log/docker:/var/log \
-  --volume /tmp/docker-data/database:/srv
+VOLUMES =
+#  --volume /var/log/docker:/var/log \
+#  --volume /tmp/docker-data/database:/srv
 
 ENV = \
   --env MYSQL_ROOT_PASSWORD="" \
