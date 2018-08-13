@@ -39,9 +39,10 @@ jobs:
     - stage: push latest docker image
       script:
         - ./latest_release.sh
-        - make
-        - docker login -u="${DOCKER_USERNAME}" -p="${DOCKER_PASSWORD}"
+        - echo
+        - make "build: ${MARIADB_VERSION}"
         - docker tag ${DOCKER_USERNAME}/docker-mariadb:${MARIADB_VERSION} ${DOCKER_USERNAME}/docker-mariadb:latest
+        - docker login --username "${DOCKER_USERNAME}" --password "${DOCKER_PASSWORD}"
         - docker push ${DOCKER_USERNAME}/docker-mariadb:latest
         - docker logout
 
@@ -49,6 +50,6 @@ jobs:
       script:
         - ./latest_release.sh
         - make
-        - docker login -u="${DOCKER_USERNAME}" -p="${DOCKER_PASSWORD}"
+        - docker login --username "${DOCKER_USERNAME}" --password "${DOCKER_PASSWORD}"
         - docker push ${DOCKER_USERNAME}/docker-mariadb:${MARIADB_VERSION}
         - docker logout
