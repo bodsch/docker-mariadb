@@ -12,12 +12,12 @@ jobs:
   include:
     - stage: build
       script:
-        - ./latest-release.sh
+        - ./latest_release.sh
         - make
 
     - stage: test plain
       script:
-        - ./latest-release.sh
+        - ./latest_release.sh
         - docker-compose --file docker-compose_example.yml build
         - docker-compose --file docker-compose_example.yml up -d
         - docker ps | grep -q database
@@ -38,7 +38,7 @@ jobs:
 
     - stage: push latest docker image
       script:
-        - ./latest-release.sh
+        - ./latest_release.sh
         - make
         - docker login -u="${DOCKER_USERNAME}" -p="${DOCKER_PASSWORD}"
         - docker tag ${DOCKER_USERNAME}/docker-mariadb:${MARIADB_VERSION} ${DOCKER_USERNAME}/docker-mariadb:latest
@@ -47,7 +47,7 @@ jobs:
 
     - stage: push version docker image
       script:
-        - ./latest-release.sh
+        - ./latest_release.sh
         - make
         - docker login -u="${DOCKER_USERNAME}" -p="${DOCKER_PASSWORD}"
         - docker push ${DOCKER_USERNAME}/docker-mariadb:${MARIADB_VERSION}
