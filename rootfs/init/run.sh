@@ -4,7 +4,6 @@
 set -e
 
 . /init/output.sh
-# . /init/config_backend.sh
 . /init/environments.sh
 
 
@@ -114,12 +113,6 @@ run() {
     set_system_user
 
     bootstrap_database
-
-    if [[ ! -z "${CONFIG_BACKEND_SERVER}" ]] && [[ ! -z "${CONFIG_BACKEND}" ]]
-    then
-      save_config
-      register_node
-    fi
 
     log_info "start instance"
     /usr/bin/mysqld \

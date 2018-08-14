@@ -9,9 +9,13 @@ services:
       dockerfile: Dockerfile
       args:
         - BUILD_DATE=${BUILD_DATE}
+        - BUILD_VERSION=${BUILD_VERSION}
+    restart: always
     container_name: database
     hostname: database
+    ports:
+      - 33060:3306
     environment:
-      - MYSQL_SYSTEM_USER=root
-      - MYSQL_ROOT_PASS=vYUQ14SGVrJRi69PsujC
+      - MARIADB_SYSTEM_USER=${MARIADB_SYSTEM_USER}
+      - MARIADB_ROOT_PASS=${MARIADB_ROOT_PASS}
 

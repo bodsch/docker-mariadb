@@ -9,17 +9,7 @@ INSTANCE = default
 
 BUILD_DATE := $(shell date +%Y-%m-%d)
 BUILD_VERSION := $(shell date +%y%m)
-MARIADB_VERSION ?= $(shell curl \
-  --silent \
-  --location \
-  --retry 3 \
-  http://dl-cdn.alpinelinux.org/alpine/latest-stable/main/x86_64/APKINDEX.tar.gz | \
-  gunzip | \
-  strings | \
-  grep -A1 "P:mariadb-common" | \
-  tail -n1 | \
-  cut -d ':' -f2 | \
-  cut -d '-' -f1)
+MARIADB_VERSION ?= $(shell ./latest_release.sh)
 
 .PHONY: build push shell run start stop rm release
 
@@ -96,6 +86,15 @@ stop:
 rm:
 	docker rm \
 		$(NAME)-$(INSTANCE)
+
+compose-file:
+	echo "BUILD_DATE=$(BUILD_DATE)" > .env
+	echo "BUILD_VERSION=$(BUILD_VERSION)" >> .env
+	echo "MARIADB_SYSTEM_USER=root" >> .env
+	echo "MARIADB_ROOT_PASS=vYUQ14SGVrJRi69PsujC" >> .env
+	docker-compose \
+		--file docker-compose_example.yml \
+		config > docker-compose.yml
 
 release:
 	make push -e VERSION=${MARIADB_VERSION}

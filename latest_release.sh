@@ -1,6 +1,6 @@
 #!/bin/bash
 
-export MARIADB_VERSION=$(curl \
+curl \
   --silent \
   --location \
   --retry 3 \
@@ -10,4 +10,4 @@ export MARIADB_VERSION=$(curl \
   grep -A1 "P:mariadb-common" | \
   tail -n1 | \
   cut -d ':' -f2 | \
-  cut -d '-' -f1)
+  cut -d '-' -f1

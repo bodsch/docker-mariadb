@@ -7,40 +7,27 @@ env:
   global:
     - BUILD_DATE=$(date +%Y-%m-%d)
     - BUILD_VERSION=$(date +%y%m)
+    - MARIADB_VERSION=$(./latest_release.sh)
 
 jobs:
   include:
     - stage: build
       script:
-        - ./latest_release.sh
         - make
 
     - stage: test plain
       script:
-        - ./latest_release.sh
-        - docker-compose --file docker-compose_example.yml build
-        - docker-compose --file docker-compose_example.yml up -d
-        - docker ps | grep -q database
-        - docker-compose --file docker-compose_example.yml kill
-        - docker-compose --file docker-compose_example.yml down
-
-#    - stage: test with consul
-#      script:
-#        - docker-compose --file docker-compose_example_consul.yml up --build -d
-#        - docker-compose --file docker-compose_example_consul.yml kill
-#        - docker-compose --file docker-compose_example_consul.yml down
-
-#    - stage: test with etcd
-#      script:
-#        - docker-compose --file docker-compose_example_etcd.yml up --build -d
-#        - docker-compose --file docker-compose_example_etcd.yml kill
-#        - docker-compose --file docker-compose_example_etcd.yml down
+        - make
+        - make compose-file
+        - docker-compose build
+        - docker-compose up -d
+        - tests/test.sh
+        - docker-compose kill
+        - docker-compose down
 
     - stage: push latest docker image
       script:
-        - ./latest_release.sh
-        - echo
-        - make "build: ${MARIADB_VERSION}"
+        - make
         - docker tag ${DOCKER_USERNAME}/docker-mariadb:${MARIADB_VERSION} ${DOCKER_USERNAME}/docker-mariadb:latest
         - docker login --username "${DOCKER_USERNAME}" --password "${DOCKER_PASSWORD}"
         - docker push ${DOCKER_USERNAME}/docker-mariadb:latest
@@ -48,7 +35,6 @@ jobs:
 
     - stage: push version docker image
       script:
-        - ./latest_release.sh
         - make
         - docker login --username "${DOCKER_USERNAME}" --password "${DOCKER_PASSWORD}"
         - docker push ${DOCKER_USERNAME}/docker-mariadb:${MARIADB_VERSION}
