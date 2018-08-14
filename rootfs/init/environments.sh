@@ -14,7 +14,6 @@ MARIADB_SYSTEM_USER=${MARIADB_SYSTEM_USER:-$(grep user /etc/mysql/my.cnf | cut -
 
 if [[ -z ${MARIADB_ROOT_PASS} ]]
 then
-#   MARIADB_ROOT_PASS=${MARIADB_ROOT_PASS:-$(pwgen -s 25 1)}
   MARIADB_ROOT_PASS=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 32 | head -n 1)
 
   log_warn "NO ROOT PASSWORD HAS BEEN SET!"

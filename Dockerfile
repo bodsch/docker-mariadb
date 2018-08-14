@@ -15,8 +15,7 @@ RUN \
     jq \
     util-linux \
     mariadb \
-    mariadb-client \
-    pwgen && \
+    mariadb-client && \
   mkdir /etc/mysql/conf.d && \
   cp /etc/mysql/my.cnf /etc/mysql/my.cnf-DIST && \
   rm -rf \
