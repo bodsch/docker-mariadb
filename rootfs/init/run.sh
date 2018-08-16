@@ -73,8 +73,8 @@ bootstrap_database() {
     log_info "create privileges for root access"
     (
       echo "USE mysql;"
-      echo "UPDATE user SET password = PASSWORD('${MARIADB_ROOT_PASS}') WHERE user = 'root';"
-      echo "create user 'root'@'%' IDENTIFIED BY '${MARIADB_ROOT_PASS}';"
+      echo "UPDATE user SET password = PASSWORD('${MARIADB_ROOT_PASSWORD}') WHERE user = 'root';"
+      echo "create user 'root'@'%' IDENTIFIED BY '${MARIADB_ROOT_PASSWORD}';"
       echo "GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' WITH GRANT OPTION;"
       echo "GRANT ALL PRIVILEGES ON *.* TO 'root'@'localhost' WITH GRANT OPTION;"
       echo "FLUSH PRIVILEGES;"
@@ -94,7 +94,7 @@ bootstrap_database() {
 [client]
 host     = localhost
 user     = root
-password = ${MARIADB_ROOT_PASS}
+password = ${MARIADB_ROOT_PASSWORD}
 socket   = ${MARIADB_RUN_DIR}/mysql.sock
 
 EOF
