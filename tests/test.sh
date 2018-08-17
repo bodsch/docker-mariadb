@@ -12,7 +12,7 @@ else
   exit 1
 fi
 
-if [[ -z "${MARIADB_SYSTEM_USER}" ]] || [[ -z "${MARIADB_ROOT_PASS}" ]]
+if [[ -z "${MARIADB_SYSTEM_USER}" ]] || [[ -z "${MARIADB_ROOT_PASSWORD}" ]]
 then
   echo "run 'make compose-file' first"
   exit 1
@@ -23,7 +23,7 @@ MARIADB_PORT=33060
 TEST_SCHEMA="QA_TEST"
 DBA_USER="QA"
 DBA_PASSWORD="$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 32 | head -n 1)"
-DBA_OPTS="--host=127.0.0.1 --user=${MARIADB_SYSTEM_USER} --password=${MARIADB_ROOT_PASS} --port=${MARIADB_PORT} --batch --skip-column-names"
+DBA_OPTS="--host=127.0.0.1 --user=${MARIADB_SYSTEM_USER} --password=${MARIADB_ROOT_PASSWORD} --port=${MARIADB_PORT} --batch --skip-column-names"
 
 popd
 

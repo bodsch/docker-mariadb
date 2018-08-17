@@ -91,7 +91,7 @@ compose-file:
 	echo "BUILD_DATE=$(BUILD_DATE)" > .env
 	echo "BUILD_VERSION=$(BUILD_VERSION)" >> .env
 	echo "MARIADB_SYSTEM_USER=root" >> .env
-	echo "MARIADB_ROOT_PASS=vYUQ14SGVrJRi69PsujC" >> .env
+	echo "MARIADB_ROOT_PASSWORD=vYUQ14SGVrJRi69PsujC" >> .env
 	docker-compose \
 		--file docker-compose_example.yml \
 		config > docker-compose.yml

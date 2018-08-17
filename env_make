@@ -5,7 +5,7 @@ VOLUMES =
 #  --volume /var/log/docker:/var/log \
 #  --volume /tmp/docker-data/database:/srv
 
-ENV = \
-  --env MYSQL_ROOT_PASSWORD="" \
-  --env MYSQL_SYSTEM_USER=""
+ENV =
+#  --env MYSQL_ROOT_PASSWORD="" \
+#  --env MYSQL_SYSTEM_USER=""
 
