@@ -1,104 +1,45 @@
+export GIT_SHA1          := $(shell git rev-parse --short HEAD)
+export DOCKER_IMAGE_NAME := mariadb
+export DOCKER_NAME_SPACE := ${USER}
+export DOCKER_VERSION    ?= latest
+export BUILD_DATE        := $(shell date +%Y-%m-%d)
+export BUILD_VERSION     := $(shell date +%y%m)
+export BUILD_TYPE        ?= stable
+export MARIADB_VERSION   ?= $(shell hooks/latest_release.sh)
 
-include env_make
 
-NS = bodsch
-
-REPO = docker-mariadb
-NAME = mariadb
-INSTANCE = default
-
-BUILD_DATE := $(shell date +%Y-%m-%d)
-BUILD_VERSION := $(shell date +%y%m)
-MARIADB_VERSION ?= $(shell ./latest_release.sh)
-
-.PHONY: build push shell run start stop rm release
+.PHONY: build shell run exec start stop clean compose-file
 
 default: build
 
-params:
-	@echo ""
-	@echo " MARIADB_VERSION: $(MARIADB_VERSION)"
-	@echo " BUILD_DATE     : $(BUILD_DATE)"
-	@echo ""
-
-build: params
-	docker build \
-		--force-rm \
-		--compress \
-		--build-arg BUILD_DATE=$(BUILD_DATE) \
-		--build-arg BUILD_VERSION=$(BUILD_VERSION) \
-		--build-arg MARIADB_VERSION=$(MARIADB_VERSION) \
-		--tag $(NS)/$(REPO):${MARIADB_VERSION} .
-
-clean:
-	docker rmi \
-		$(NS)/$(REPO):${MARIADB_VERSION}
-
-history:
-	docker history \
-		$(NS)/$(REPO):${MARIADB_VERSION}
-
-push:
-	docker push \
-		$(NS)/$(REPO):${MARIADB_VERSION}
+build:
+	@hooks/build
 
 shell:
-	docker run \
-		--rm \
-		--name $(NAME)-$(INSTANCE) \
-		--interactive \
-		--tty \
-		$(PORTS) \
-		$(VOLUMES) \
-		$(ENV) \
-		$(NS)/$(REPO):${MARIADB_VERSION} \
-		/bin/sh
+	@hooks/shell
 
 run:
-	docker run \
-		--rm \
-		--name $(NAME)-$(INSTANCE) \
-		$(PORTS) \
-		$(VOLUMES) \
-		$(ENV) \
-		$(NS)/$(REPO):${MARIADB_VERSION}
+	@hooks/run
 
 exec:
-	docker exec \
-		--interactive \
-		--tty \
-		$(NAME)-$(INSTANCE) \
-		/bin/sh
+	@hooks/exec
 
 start:
-	docker run \
-		--detach \
-		--name $(NAME)-$(INSTANCE) \
-		$(PORTS) \
-		$(VOLUMES) \
-		$(ENV) \
-		$(NS)/$(REPO):${MARIADB_VERSION}
+	@hooks/start
 
 stop:
-	docker stop \
-		$(NAME)-$(INSTANCE)
+	@hooks/stop
 
-rm:
-	docker rm \
-		$(NAME)-$(INSTANCE)
+clean:
+	@hooks/clean
 
 compose-file:
-	echo "BUILD_DATE=$(BUILD_DATE)" > .env
-	echo "BUILD_VERSION=$(BUILD_VERSION)" >> .env
-	echo "MARIADB_SYSTEM_USER=root" >> .env
-	echo "MARIADB_ROOT_PASSWORD=vYUQ14SGVrJRi69PsujC" >> .env
-	docker-compose \
-		--file docker-compose_example.yml \
-		config > docker-compose.yml
+	@hooks/compose-file
 
-release:
-	make push -e VERSION=${MARIADB_VERSION}
+linter:
+	@tests/linter.sh
 
-default: build
+integration_test:
+	@tests/integration_test.sh
 
-
+test: linter integration_test

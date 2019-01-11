@@ -18,4 +18,3 @@ services:
     environment:
       - MARIADB_SYSTEM_USER=${MARIADB_SYSTEM_USER}
       - MARIADB_ROOT_PASSWORD=${MARIADB_ROOT_PASSWORD}
-
