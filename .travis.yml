@@ -21,6 +21,7 @@ jobs:
         - make compose-file
         - docker-compose build
         - docker-compose up -d
+        - sleep 20s
         - make test
         - docker-compose kill
         - docker-compose down
@@ -34,6 +35,7 @@ jobs:
         - docker logout
 
     - stage: push version docker image
+      if: branch = master
       script:
         - make
         - docker login --username "${DOCKER_USERNAME}" --password "${DOCKER_PASSWORD}"
