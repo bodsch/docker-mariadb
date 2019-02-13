@@ -1,5 +1,5 @@
 
-FROM alpine:3.8
+FROM alpine:3.9
 
 ARG VCS_REF
 ARG BUILD_DATE
@@ -19,21 +19,23 @@ RUN \
     mariadb \
     mariadb-client && \
   mkdir /etc/mysql/conf.d && \
-  cp /etc/mysql/my.cnf /etc/mysql/my.cnf-DIST && \
+  if [ -f /etc/mysql/my.cnf ] ; then \
+    cp /etc/mysql/my.cnf /etc/mysql/my.cnf-DIST ; \
+  fi && \
   rm -rf \
     /tmp/* \
     /var/cache/apk/*
 
-COPY rootfs/ /
+ COPY rootfs/ /
 
-VOLUME ["/etc/mysql/conf.d"]
+VOLUME ["/etc/my.cnf.d"]
 
 CMD ["/init/run.sh"]
 
 HEALTHCHECK \
   --interval=5s \
-  --timeout=2s \
-  --retries=12 \
+  --timeout=10s \
+  --retries=10 \
   CMD /init/health_check.sh
 
 # ---------------------------------------------------------------------------------------

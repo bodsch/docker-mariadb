@@ -20,10 +20,27 @@ fi
 
 MARIADB_PORT=33060
 
+cat << EOF > /tmp/.root-my.cnf
+[client]
+host     = 127.0.0.1
+user     = ${MARIADB_SYSTEM_USER}
+password = ${MARIADB_ROOT_PASSWORD}
+port     = ${MARIADB_PORT}
+# socket   = ${MARIADB_RUN_DIR}/mysql.sock
+
+EOF
+
 TEST_SCHEMA="QA_TEST"
 DBA_USER="QA"
 DBA_PASSWORD="$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 32 | head -n 1)"
-DBA_OPTS="--host=127.0.0.1 --user=${MARIADB_SYSTEM_USER} --password=${MARIADB_ROOT_PASSWORD} --port=${MARIADB_PORT} --batch --skip-column-names"
+
+ \
+
+DBA_OPTS="\
+  --defaults-file=/tmp/.root-my.cnf \
+  --batch --skip-column-names"
+
+#   --user=${MARIADB_SYSTEM_USER} --password=${MARIADB_ROOT_PASSWORD} --port=${MARIADB_PORT} \
 
 popd
 
@@ -105,11 +122,13 @@ check_schema() {
 
 inspect() {
 
-  echo "inspect needed containers"
   for d in database
   do
     # docker inspect --format "{{lower .Name}}" ${d}
-    docker inspect --format '{{with .State}} {{$.Name}} has pid {{.Pid}} {{end}}' ${d}
+    c=$(docker inspect --format '{{with .State}} {{$.Name}} has pid {{.Pid}} {{end}}' ${d})
+    s=$(docker inspect --format '{{json .State.Health }}' ${d} | jq --raw-output .Status)
+
+    printf "%-40s - %s\n"  "${c}" "${s}"
   done
 }
 

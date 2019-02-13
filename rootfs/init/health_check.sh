@@ -1,6 +1,8 @@
 #!/bin/sh
 
-set -x
+. /init/environments.sh
+
+bootstrap="${WORK_DIR}/bootstrapped"
 
 set -eo pipefail
 #
@@ -10,9 +12,17 @@ set -eo pipefail
 #   exit 0
 # fi
 
-host="$(hostname -i || echo '127.0.0.1')"
+while true
+do
+  if [ ! -f ${bootstrap} ]
+  then
+    sleep 5s
+  else
+    break
+  fi
+done
 
-if select="$(echo 'SELECT 1' | mysql --defaults-file="/root/.my.cnf" --host="${host}" --silent)" && [[ "${select}" = '1' ]]
+if select="$(echo 'SELECT 1' | mysql --defaults-file="/root/.my.cnf" --silent)" && [ "${select}" = '1' ]
 then
   exit 0
 fi

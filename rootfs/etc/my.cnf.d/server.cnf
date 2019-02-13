@@ -1,0 +1,33 @@
+[mysqld]
+datadir                         = %WORK_DIR%/data
+expire_logs_days                = 1
+join_buffer_size                = 4M
+key_buffer_size                 = 16M
+log-error                       = %WORK_DIR%/log/mysqld.log
+log-bin                         = %WORK_DIR%/log/binlogs
+long_query_time                 = 5
+max_allowed_packet              = 16M
+max_binlog_size                 = 10M
+max_connections                 = 16
+max_heap_table_size             = 32M
+myisam_recover                  = BACKUP
+bind-address                    = 127.0.0.1
+port                            = 3306
+query_cache_limit               = 8M
+query_cache_size                = 16M
+skip-external-locking
+slow_query_log                  = 0
+slow_query_log_file             = %WORK_DIR%/log/mysqld-slow.log
+socket                          = %WORK_DIR%/run/mysql.sock
+sort_buffer_size                = 1M
+net_buffer_length               = 32K
+read_buffer_size                = 256K
+read_rnd_buffer_size            = 512K
+table_cache                     = 256
+thread_cache_size               = 8
+thread_stack                    = 256K
+table_open_cache                = 64
+tmp_table_size                  = 32M
+tmpdir                          = %WORK_DIR%/tmp
+character-set-server            = utf8
+collation-server                = utf8_general_ci

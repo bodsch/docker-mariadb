@@ -1,21 +1,55 @@
 #!/bin/sh
 #
 
-set -e
+#set -eo pipefail
+
+#set -u
+#set -x
+
+SERVER_CNF="/etc/mysql/my.cnf"
+SERVER_CNF_D="/etc/mysql"
 
 . /init/output.sh
 . /init/environments.sh
 
+config_check() {
+
+  # since alpine 3.9 the configuration files are located unter /etc/my.cnf.d/*.cnf
+
+  if [ -d /etc/my.cnf.d ]
+  then
+    SERVER_CNF=/etc/my.cnf
+    SERVER_CNF_D=/etc/my.cnf.d
+    SERVER_CONFIG_CNF="${SERVER_CNF_D}/mariadb-server.cnf"
+
+    if [ -f "${SERVER_CNF_D}/mariadb-server.cnf" ]
+    then
+      rm -f "${SERVER_CNF_D}/mariadb-server.cnf"
+    fi
+
+    if [ -d /etc/mysql ]
+    then
+      rm -rf /etc/mysql
+    fi
+  fi
+
+  export MARIADB_SYSTEM_USER=${MARIADB_SYSTEM_USER:-${current_user}}
+}
 
 set_system_user() {
 
-  local current_user=$(grep user /etc/mysql/my.cnf | cut -d '=' -f 2 | sed 's| ||g')
+  file=$(grep -l user ${SERVER_CNF_D}/*.cnf)
 
-  [[ "${MARIADB_SYSTEM_USER}" = "${current_user}" ]] && return
+  current_user=$(grep user "${file}" | cut -d '=' -f 2 | sed 's| ||g')
+
+  if [ "${MARIADB_SYSTEM_USER}" = "${current_user}" ]
+  then
+    return
+  fi
 
   sed -i \
     -e "s/\(user.*=\).*/\1 ${MARIADB_SYSTEM_USER}/g" \
-    /etc/mysql/my.cnf
+    "${file}"
 }
 
 
@@ -23,36 +57,45 @@ bootstrap_database() {
 
   bootstrap="${WORK_DIR}/bootstrapped"
 
-  sed -i \
-    -e "s|%WORK_DIR%|${WORK_DIR}|g" \
-    /etc/mysql/my.cnf
+  files=$(grep -l "%WORK_DIR%" ${SERVER_CNF_D}/*.cnf)
 
-  [[ -d ${MARIADB_DATA_DIR} ]]        || mkdir -p ${MARIADB_DATA_DIR}
-  [[ -d ${MARIADB_LOG_DIR} ]]         || mkdir -p ${MARIADB_LOG_DIR}
-  [[ -d ${MARIADB_TMP_DIR} ]]         || mkdir -p ${MARIADB_TMP_DIR}
-  [[ -d ${MARIADB_RUN_DIR} ]]         || mkdir -p ${MARIADB_RUN_DIR}
-  [[ -d ${MARIADB_INNODB_DIR} ]]      || mkdir -p ${MARIADB_INNODB_DIR}
+  for f in ${files}
+  do
+    sed -i \
+      -e "s|%WORK_DIR%|${WORK_DIR}|g" \
+      "${f}"
+  done
 
-  chown -R ${MARIADB_SYSTEM_USER}: ${WORK_DIR}
+  [ -d "${MARIADB_DATA_DIR}" ]        || mkdir -p "${MARIADB_DATA_DIR}"
+  [ -d "${MARIADB_LOG_DIR}" ]         || mkdir -p "${MARIADB_LOG_DIR}"
+  [ -d "${MARIADB_TMP_DIR}" ]         || mkdir -p "${MARIADB_TMP_DIR}"
+  [ -d "${MARIADB_RUN_DIR}" ]         || mkdir -p "${MARIADB_RUN_DIR}"
+  [ -d "${MARIADB_INNODB_DIR}" ]      || mkdir -p "${MARIADB_INNODB_DIR}"
 
-  if [[ ! -f ${bootstrap} ]]
+  chown -R "${MARIADB_SYSTEM_USER}": "${WORK_DIR}"
+
+  if [ ! -f "${bootstrap}" ]
   then
 
     log_info "start bootstrapping"
 
-    [[ -f /root/.my.cnf ]] && rm /root/.my.cnf
+    [ -f /root/.my.cnf ] && rm /root/.my.cnf
 
     log_info "install initial databases"
-    mysql_install_db --user=${MARIADB_SYSTEM_USER} 1> /dev/null 2> /dev/null
-    [[ $? -gt 0 ]] && exit $?
+    mysql_install_db \
+      --user="${MARIADB_SYSTEM_USER}" \
+      > /dev/null 2> /dev/null
+    [ $? -gt 0 ] && exit $?
 
     log_info "start initial instance in safe mode to set passwords"
-    /usr/bin/mysqld_safe --syslog-tag=init > /dev/null 2> /dev/null &
-    [[ $? -gt 0 ]] && exit $?
+    /usr/bin/mysqld_safe \
+      --syslog-tag=init \
+      > /dev/null 2> /dev/null &
+    [ $? -gt 0 ] && exit $?
 
     set +e
     retry=30
-    until [[ ${retry} -le 0 ]]
+    until [ ${retry} -le 0 ]
     do
       # -v              Verbose
       # -w secs         Timeout for connects and final net reads
@@ -60,12 +103,12 @@ bootstrap_database() {
       #
       status=$(nc -v -w1 -z 127.0.0.1 3306 2>&1)
 
-      if [[ $? -eq 0 ]] && [[ $(echo "${status}" | grep -c open) -eq 1 ]]
+      if [ $? -eq 0 ] && [ $(echo "${status}" | grep -c open) -eq 1 ]
       then
         break
       else
         sleep 5s
-        retry=$(expr ${retry} - 1)
+        retry=$((retry - 1))
       fi
     done
     set -e
@@ -79,15 +122,15 @@ bootstrap_database() {
       echo "GRANT ALL PRIVILEGES ON *.* TO 'root'@'localhost' WITH GRANT OPTION;"
       echo "FLUSH PRIVILEGES;"
     ) | mysql --host=localhost > /dev/null 2> /dev/null
-    [[ $? -gt 0 ]] && exit $?
+    [ $? -gt 0 ] && exit $?
 
     sleep 2s
 
     log_info "kill bootstrapping instance"
     killall mysqld
-    [[ $? -gt 0 ]] && exit $?
+    [ $? -gt 0 ] && exit $?
 
-    touch ${bootstrap}
+    touch "${bootstrap}"
   fi
 
   cat << EOF > /root/.my.cnf
@@ -99,31 +142,27 @@ socket   = ${MARIADB_RUN_DIR}/mysql.sock
 
 EOF
 
+  listen=$(grep -l "bind-address" ${SERVER_CNF_D}/*.cnf)
+
   sed -i \
     -e "s/\(bind-address.*=\).*/\1 0.0.0.0/g" \
-    /etc/mysql/my.cnf
+    "${listen}"
 }
 
 
 run() {
 
-  if [[ ! -z ${MARIADB_BIN} ]]
-  then
+  config_check
 
-    set_system_user
+  set_system_user
 
-    bootstrap_database
+  bootstrap_database
 
-    log_info "start instance"
-    /usr/bin/mysqld \
-      --user=${MARIADB_SYSTEM_USER} \
-      --userstat \
-      --console
-
-  else
-    log_error "no MySQL binary found!"
-    exit 1
-  fi
+  log_info "start instance"
+  /usr/bin/mysqld \
+    --user="${MARIADB_SYSTEM_USER}" \
+    --userstat \
+    --console
 }
 
 
