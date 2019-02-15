@@ -10,6 +10,8 @@ MARIADB_TMP_DIR=${WORK_DIR}/tmp
 MARIADB_RUN_DIR=${WORK_DIR}/run
 MARIADB_INNODB_DIR=${WORK_DIR}/innodb
 
+MARIADB_SYSTEM_USER=${MARIADB_SYSTEM_USER:-root}
+
 if [ -z ${MARIADB_ROOT_PASSWORD} ]
 then
   MARIADB_ROOT_PASSWORD=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 32 | head -n 1)

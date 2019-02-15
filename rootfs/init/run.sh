@@ -32,8 +32,6 @@ config_check() {
       rm -rf /etc/mysql
     fi
   fi
-
-  export MARIADB_SYSTEM_USER=${MARIADB_SYSTEM_USER:-${current_user}}
 }
 
 set_system_user() {
@@ -44,8 +42,11 @@ set_system_user() {
 
   if [ "${MARIADB_SYSTEM_USER}" = "${current_user}" ]
   then
+    export MARIADB_SYSTEM_USER=${current_user}
     return
   fi
+
+  export MARIADB_SYSTEM_USER
 
   sed -i \
     -e "s/\(user.*=\).*/\1 ${MARIADB_SYSTEM_USER}/g" \
