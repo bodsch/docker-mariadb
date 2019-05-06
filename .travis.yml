@@ -1,44 +1,39 @@
 sudo: required
-
 services:
-  - docker
-
+- docker
 env:
   global:
-    - BUILD_DATE=$(date +%Y-%m-%d)
-    - BUILD_VERSION=$(date +%y%m)
-    - MARIADB_VERSION=$(./hooks/latest_release.sh)
-
+  - BUILD_DATE=$(date +%Y-%m-%d)
+  - BUILD_VERSION=$(date +%y%m)
+  - MARIADB_VERSION=$(./hooks/latest_release.sh)
+  - secure: bLg1VJUd5YyNpihnOKGjo/lh+hGnZPA2mcgNX+VKWByvv2wTE68yeSYr7/Q7g6QCV50wThjWHoNNaB+dj86d1zMMtyy90VBFj174Eh4ZaUQ6eLq6y9TbyeTlxYNAhmz6U/jc9uI19tB3l/jSN6XKqi+GJMKgMER5mUDnbD0J1D2kj9vwbd4TEsbEE9yD1/1FEKjPPxEVZJtuVPRl6L+IovZXaHjV+HNdn5+H0Sq3EyleUEn4mDxtJPfyZ0us6B8AoGFJgHXgfrdg3vercSJgOFQWICW2quTgo6HGcMdcMI1E7ZBxAD0prpLfmnsOhRiqTB3RVOaGNFR3tAs/5/P4Po1mxVdfXQvhtQKOBVLfNibvh8OXR78eUvAuWyGTdQfx3JOOZNjAhu4R6jrjgMozVhTtsnoQeWMuGy1mN5aWCsK6v8ie4qZdvHJDetDUTWsW6CV79OEzgbbvApCAececvRbt5ROfgki6zcXFAVmHbSczR/p+G3+MdroG0cJ5efhqsV0LDHn212BzOMnLl4n0MDdrwuQiZ/PJBcSiukuL+kk0KscizHF0VMWpcMuj+0rjt7z7Evblt6ZzDv3HE459zJWgn4kSBodsTrmvLh6Z4txsIFgG8S09zb5R0oYTah9eID4aU+wg6vfLcoVBsb+PCYLu24ip03f6vBm6/55q4Sc=
 jobs:
   include:
-    - stage: build
-      script:
-        - make
-
-    - stage: test plain
-      script:
-        - make
-        - make compose-file
-        - docker-compose build
-        - docker-compose up -d
-        - sleep 20s
-        - make test
-        - docker-compose kill
-        - docker-compose down
-
-    - stage: push latest docker image
-      script:
-        - make
-        - docker login -u="${DOCKER_USERNAME}" -p="${DOCKER_PASSWORD}"
-        - docker tag ${USER}/mariadb:latest ${DOCKER_USERNAME}/docker-mariadb:latest
-        - docker push ${DOCKER_USERNAME}/docker-mariadb:latest
-        - docker logout
-
-    - stage: push version docker image
-      if: branch = master
-      script:
-        - make
-        - docker login --username "${DOCKER_USERNAME}" --password "${DOCKER_PASSWORD}"
-        - docker tag ${USER}/mariadb:latest ${DOCKER_USERNAME}/docker-mariadb:${MARIADB_VERSION}
-        - docker push ${DOCKER_USERNAME}/docker-mariadb:${MARIADB_VERSION}
-        - docker logout
+  - stage: build
+    script:
+    - make
+  - stage: test plain
+    script:
+    - make
+    - make compose-file
+    - docker-compose build
+    - docker-compose up -d
+    - sleep 20s
+    - make test
+    - docker-compose kill
+    - docker-compose down
+  - stage: push latest docker image
+    script:
+    - make
+    - docker login -u="${DOCKER_USERNAME}" -p="${DOCKER_PASSWORD}"
+    - docker tag ${USER}/mariadb:latest ${DOCKER_USERNAME}/docker-mariadb:latest
+    - docker push ${DOCKER_USERNAME}/docker-mariadb:latest
+    - docker logout
+  - stage: push version docker image
+    if: branch = master
+    script:
+    - make
+    - docker login --username "${DOCKER_USERNAME}" --password "${DOCKER_PASSWORD}"
+    - docker tag ${USER}/mariadb:latest ${DOCKER_USERNAME}/docker-mariadb:${MARIADB_VERSION}
+    - docker push ${DOCKER_USERNAME}/docker-mariadb:${MARIADB_VERSION}
+    - docker logout
