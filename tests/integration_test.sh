@@ -1,26 +1,28 @@
 #!/bin/bash
 
-pushd $PWD
+prepare() {
 
-cd $(dirname $(readlink -f "$0"))
+  pushd $PWD > /dev/null
 
-if [[ -f ../.env ]]
-then
-  . ../.env
-else
-  echo "run 'make compose-file' first"
-  exit 1
-fi
+  cd $(dirname $(readlink -f "$0"))
 
-if [[ -z "${MARIADB_SYSTEM_USER}" ]] || [[ -z "${MARIADB_ROOT_PASSWORD}" ]]
-then
-  echo "run 'make compose-file' first"
-  exit 1
-fi
+  if [[ -f ../.env ]]
+  then
+    . ../.env
 
-MARIADB_PORT=33060
+    if [[ -z "${MARIADB_SYSTEM_USER}" ]] || [[ -z "${MARIADB_ROOT_PASSWORD}" ]]
+    then
+      echo "run 'make compose-file' first"
+      exit 1
+    fi
+  else
+    echo "run 'make compose-file' first"
+    exit 1
+  fi
 
-cat << EOF > /tmp/.root-my.cnf
+  MARIADB_PORT=33060
+
+  cat << EOF > /tmp/.root-my.cnf
 [client]
 host     = 127.0.0.1
 user     = ${MARIADB_SYSTEM_USER}
@@ -30,21 +32,18 @@ port     = ${MARIADB_PORT}
 
 EOF
 
-TEST_SCHEMA="QA_TEST"
-DBA_USER="QA"
-DBA_PASSWORD="$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 32 | head -n 1)"
+  TEST_SCHEMA="QA_TEST"
+  DBA_USER="QA"
+  DBA_PASSWORD=$(< /dev/urandom tr -dc A-Z-a-z-0-9 | fold -w 32 | head -n 1; echo)
+  DBA_OPTS="
+    --defaults-file=/tmp/.root-my.cnf
+    --batch --skip-column-names"
 
- \
+  popd > /dev/null
 
-DBA_OPTS="\
-  --defaults-file=/tmp/.root-my.cnf \
-  --batch --skip-column-names"
+}
 
-#   --user=${MARIADB_SYSTEM_USER} --password=${MARIADB_ROOT_PASSWORD} --port=${MARIADB_PORT} \
-
-popd
-
-# wait for the Icinga2 Master
+# wait for the database
 #
 wait_for_database() {
 
@@ -60,7 +59,7 @@ wait_for_database() {
       break
     else
       sleep 3s
-      RETRY=$(expr ${RETRY} - 1)
+      RETRY=$((RETRY - 1))
     fi
   done
 
@@ -84,7 +83,7 @@ wait_for_database() {
 
     echo -n " ."
     sleep 3s
-    RETRY=$(expr ${RETRY} - 1)
+    RETRY=$((RETRY - 1))
   done
 
   echo ""
@@ -92,6 +91,7 @@ wait_for_database() {
 
 check_schema() {
 
+  echo ""
   # check if database already created ...
   #
   query="SELECT TABLE_SCHEMA FROM information_schema.tables WHERE table_schema = \"${TEST_SCHEMA}\" limit 1;"
@@ -117,12 +117,15 @@ check_schema() {
 
     echo "successful"
   fi
+  echo ""
 }
 
 
 inspect() {
 
-  for d in database
+  echo ""
+  echo "inspect needed containers"
+  for d in $(docker ps | tail -n +2 | awk  '{print($1)}')
   do
     # docker inspect --format "{{lower .Name}}" ${d}
     c=$(docker inspect --format '{{with .State}} {{$.Name}} has pid {{.Pid}} {{end}}' ${d})
@@ -130,11 +133,27 @@ inspect() {
 
     printf "%-40s - %s\n"  "${c}" "${s}"
   done
+  echo ""
 }
 
-inspect
-wait_for_database
-check_schema
+
+if [[ $(docker ps | tail -n +2 | grep -c mariadb) -eq 1 ]]
+then
+  inspect
+
+  prepare
+
+  wait_for_database
+  check_schema
+
+  exit 0
+else
+  echo "please run "
+  echo " make compose-file"
+  echo " docker-compose up --build -d"
+  echo "before"
+
+  exit 1
+fi
 
 exit 0
-

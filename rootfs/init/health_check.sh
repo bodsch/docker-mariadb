@@ -14,7 +14,7 @@ set -eo pipefail
 
 while true
 do
-  if [ ! -f ${bootstrap} ]
+  if [ ! -f "${bootstrap}" ]
   then
     sleep 5s
   else

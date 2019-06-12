@@ -1,0 +1,22 @@
+---
+version: '3.3'
+
+services:
+
+  database:
+    restart: always
+    build:
+      context: ..
+      dockerfile: Dockerfile
+      args:
+        - BUILD_DATE
+        - BUILD_VERSION
+        - BUILD_TYPE
+        - MARIADB_VERSION
+    ports:
+      - 33060:3306
+    environment:
+      - MARIADB_SYSTEM_USER
+      - MARIADB_ROOT_PASSWORD
+    container_name: database
+    hostname: database
